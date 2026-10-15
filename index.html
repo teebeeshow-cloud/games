@@ -158,21 +158,22 @@
 
     .word-display {
       display: flex;
-      gap: 12px;
+      gap: 8px;
       flex-wrap: wrap;
       justify-content: center;
+      max-width: 600px;
     }
 
     .letter-box {
-      width: 42px;
-      height: 52px;
+      width: 36px;
+      height: 46px;
       border-bottom: 4px solid var(--tb-crimson);
       background: rgba(255, 255, 255, 0.05);
       border-radius: 4px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 32px;
+      font-size: 26px;
       font-weight: 900;
       color: var(--text-white);
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
@@ -303,13 +304,11 @@
       <!-- SVG Hangman -->
       <div class="svg-container">
         <svg width="150" height="180" viewBox="0 0 150 180">
-          <!-- Structure -->
           <line x1="10" y1="170" x2="140" y2="170" class="gallows" />
           <line x1="40" y1="170" x2="40" y2="20" class="gallows" />
           <line x1="40" y1="20" x2="100" y2="20" class="gallows" />
           <line x1="100" y1="20" x2="100" y2="40" class="gallows" />
 
-          <!-- Body Parts -->
           <circle cx="100" cy="55" r="15" class="hangman-part" id="part-0" fill="none" />
           <line x1="100" y1="70" x2="100" y2="115" class="hangman-part" id="part-1" />
           <line x1="100" y1="80" x2="80" y2="100" class="hangman-part" id="part-2" />
@@ -321,15 +320,15 @@
 
       <!-- Word Display Area -->
       <div class="word-area">
-        <div class="category-hint" id="categoryHint">CATEGORY: GEOPOLITICS</div>
+        <div class="category-hint" id="categoryHint">CATEGORY: HUMOR</div>
         <div class="word-display" id="wordDisplay"></div>
         <div class="used-letters" id="usedLetters"></div>
       </div>
     </div>
 
-    <!-- Chat Simulator / Input (Utilisable aussi localement) -->
+    <!-- Chat Simulator / Input -->
     <div class="chat-simulator">
-      <input type="text" id="chatInput" class="chat-input" placeholder="Saisir une lettre ou un mot..." autofocus>
+      <input type="text" id="chatInput" class="chat-input" placeholder="Type a letter or word..." autofocus>
       <button class="chat-btn" id="sendBtn">GUESS</button>
     </div>
 
@@ -342,7 +341,6 @@
   </div>
 
   <script>
-    // Banque de mots
     const WORD_BANK = [
       { word: "TRISTANISGREAT", category: "HUMOR & BARROOM TALK" },
       { word: "SOUNDISAFUCKINRACIST", category: "STREAM & CHAT HUMOR" },
@@ -357,7 +355,6 @@
     let wrongGuesses = 0;
     const MAX_ERRORS = 6;
 
-    // Synthetiseur Audio Web
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     function playSound(type) {
       if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -447,7 +444,9 @@
         } else {
           wrongGuesses++;
           playSound('bad');
-          document.getElementById(`part-${wrongGuesses - 1}`).classList.add('visible');
+          if (wrongGuesses <= MAX_ERRORS) {
+            document.getElementById(`part-${wrongGuesses - 1}`).classList.add('visible');
+          }
           document.getElementById('attemptsLeft').innerText = `ERRORS: ${wrongGuesses} / ${MAX_ERRORS}`;
         }
       } else if (cleanInput.length > 1) {
@@ -459,8 +458,8 @@
           playSound('bad');
           if (wrongGuesses <= MAX_ERRORS) {
             document.getElementById(`part-${wrongGuesses - 1}`).classList.add('visible');
-            document.getElementById('attemptsLeft').innerText = `ERRORS: ${wrongGuesses} / ${MAX_ERRORS}`;
           }
+          document.getElementById('attemptsLeft').innerText = `ERRORS: ${wrongGuesses} / ${MAX_ERRORS}`;
         }
       }
 
@@ -492,7 +491,7 @@
       initGame();
     }
 
-    // Gestion de la saisie manuelle / simulation
+    // Gestion du champ de saisie local (permet de tester ou de jouer directement sur l'overlay OBS)
     document.getElementById('sendBtn').addEventListener('click', () => {
       const input = document.getElementById('chatInput');
       processGuess(input.value);
@@ -507,13 +506,8 @@
       }
     });
 
-    // -------------------------------------------------------------
-    // INTEGRATION DU CHAT KICK EN TEMPS REEL (WEBSOCKET PUSHER)
-    // -------------------------------------------------------------
-    function connectKickChat(chatroomId) {
-      const socket = new WebSocket("wss://ws-us2.pusher.com/app/eb1d5f283082f78b921c?protocol=7&client=js&version=7.4.0&flash=false");
-
-      socket.onopen = () => {
-        console.log("Connecté au tchat Kick avec succès !");
-        socket.send(JSON.stringify({
-          event: "
+    // Lancement du jeu
+    initGame();
+  </script>
+</body>
+</html>
