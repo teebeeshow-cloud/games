@@ -5,18 +5,345 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TB Show - Interactive Chat Hangman</title>
   
-  <!-- Fonts & Icons -->
+  <!-- Fonts & External Scripts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=Big+Shoulders+Inline:wght@800;900&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   
-  <!-- Firebase SDK (Version modulaire compatible CDN) -->
+  <style>
+    :root {
+      --tb-wine: #800020;
+      --tb-crimson: #B22222;
+      --tb-bright-red: #E60000;
+      --tb-wine-glow: rgba(178, 34, 34, 0.45);
+      --tb-gold: #D4AF37;
+      --tb-gold-light: #F3E5AB;
+      --tb-card-bg: rgba(13, 3, 6, 0.85);
+      --tb-border: rgba(178, 34, 34, 0.45);
+      --text-white: #FFFFFF;
+      --text-muted: #E0C0C6;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    /* FOND TRANSPARENT POUR OBS STUDIO / STREAMLABS */
+    body {
+      background-color: transparent !important;
+      background-image: none !important;
+      font-family: 'Big Shoulders Display', sans-serif;
+      color: var(--text-white);
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+      overflow: hidden;
+    }
+
+    /* Main Container avec fond semi-transparent et effet verre */
+    .app-container {
+      width: 100%;
+      max-width: 900px;
+      height: 100%;
+      max-height: 500px;
+      background: var(--tb-card-bg) !important;
+      border: 2px solid var(--tb-border);
+      border-left: 8px solid var(--tb-crimson);
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px var(--tb-wine-glow);
+      backdrop-filter: blur(10px);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 16px;
+      position: relative;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--tb-border);
+      padding-bottom: 8px;
+    }
+
+    .brand-badge {
+      font-family: 'Big Shoulders Inline', sans-serif;
+      font-size: 24px;
+      color: var(--tb-gold);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .game-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--text-white);
+      letter-spacing: 1.5px;
+    }
+
+    .attempts-badge {
+      font-size: 16px;
+      font-weight: 800;
+      background: rgba(178, 34, 34, 0.3);
+      border: 1px solid var(--tb-crimson);
+      padding: 4px 10px;
+      border-radius: 6px;
+      color: var(--tb-gold-light);
+    }
+
+    /* Main Body Area */
+    .game-body {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      justify-content: space-between;
+      flex: 1;
+      margin: 10px 0;
+    }
+
+    /* Hangman Visual SVG */
+    .svg-container {
+      width: 180px;
+      height: 220px;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--tb-border);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    svg line, svg circle {
+      stroke: var(--text-white);
+      stroke-width: 4;
+      stroke-linecap: round;
+      transition: all 0.3s ease;
+    }
+
+    .gallows {
+      stroke: var(--tb-gold) !important;
+      stroke-width: 5 !important;
+    }
+
+    .hangman-part {
+      opacity: 0;
+    }
+
+    .hangman-part.visible {
+      opacity: 1;
+      stroke: var(--tb-bright-red) !important;
+    }
+
+    /* Word & Guesses Area */
+    .word-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    .word-display {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+      max-width: 600px;
+    }
+
+    .letter-box {
+      width: 36px;
+      height: 46px;
+      border-bottom: 4px solid var(--tb-crimson);
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      font-weight: 900;
+      color: var(--text-white);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    }
+
+    .letter-box.revealed {
+      color: var(--tb-gold);
+      border-bottom-color: var(--tb-gold);
+    }
+
+    .category-hint {
+      font-size: 16px;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    /* Used Letters Grid */
+    .used-letters {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      max-width: 400px;
+      justify-content: center;
+      min-height: 36px;
+    }
+
+    .used-tag {
+      font-size: 14px;
+      font-weight: 800;
+      padding: 2px 8px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 4px;
+      color: var(--text-muted);
+    }
+
+    .used-tag.wrong {
+      background: rgba(178, 34, 34, 0.4);
+      color: #FF8888;
+      border: 1px solid var(--tb-bright-red);
+    }
+
+    /* Chat Input / Controls */
+    .chat-simulator {
+      display: flex;
+      gap: 8px;
+      border-top: 1px solid var(--tb-border);
+      padding-top: 10px;
+    }
+
+    .chat-input {
+      flex: 1;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid var(--tb-border);
+      padding: 8px 12px;
+      border-radius: 6px;
+      color: var(--text-white);
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .chat-btn {
+      background: linear-gradient(135deg, var(--tb-crimson), var(--tb-wine));
+      border: 1px solid var(--tb-gold);
+      color: var(--text-white);
+      font-family: 'Big Shoulders Display', sans-serif;
+      font-size: 18px;
+      font-weight: 800;
+      padding: 0 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .chat-btn:hover {
+      filter: brightness(1.2);
+    }
+
+    /* Banner Overlay (Victory/Defeat) */
+    .status-overlay {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(13, 3, 6, 0.95);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      z-index: 20;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s ease;
+    }
+
+    .status-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .status-title {
+      font-size: 48px;
+      font-weight: 900;
+      color: var(--tb-gold);
+      letter-spacing: 2px;
+      margin-bottom: 10px;
+    }
+
+    .status-desc {
+      font-size: 20px;
+      color: var(--text-white);
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Header -->
+    <div class="header">
+      <span class="brand-badge">THE BEYOND SHOW</span>
+      <span class="game-title">HANGSTEIN</span>
+      <span class="attempts-badge" id="attemptsLeft">ERRORS: 0 / 6</span>
+    </div>
+
+    <!-- Game Body -->
+    <div class="game-body">
+      <!-- SVG Hangman -->
+      <div class="svg-container">
+        <svg width="150" height="180" viewBox="0 0 150 180">
+          <line x1="10" y1="170" x2="140" y2="170" class="gallows" />
+          <line x1="40" y1="170" x2="40" y2="20" class="gallows" />
+          <line x1="40" y1="20" x2="100" y2="20" class="gallows" />
+          <line x1="100" y1="20" x2="100" y2="40" class="gallows" />
+
+          <circle cx="100" cy="55" r="15" class="hangman-part" id="part-0" fill="none" />
+          <line x1="100" y1="70" x2="100" y2="115" class="hangman-part" id="part-1" />
+          <line x1="100" y1="80" x2="80" y2="100" class="hangman-part" id="part-2" />
+          <line x1="100" y1="80" x2="120" y2="100" class="hangman-part" id="part-3" />
+          <line x1="100" y1="115" x2="80" y2="145" class="hangman-part" id="part-4" />
+          <line x1="100" y1="115" x2="120" y2="145" class="hangman-part" id="part-5" />
+        </svg>
+      </div>
+
+      <!-- Word Display Area -->
+      <div class="word-area">
+        <div class="category-hint" id="categoryHint">CATEGORY: LOADING...</div>
+        <div class="word-display" id="wordDisplay"></div>
+        <div class="used-letters" id="usedLetters"></div>
+      </div>
+    </div>
+
+    <!-- Chat Simulator / Input -->
+    <div class="chat-simulator">
+      <input type="text" id="chatInput" class="chat-input" placeholder="Tapez une lettre ou le mot complet..." autofocus>
+      <button class="chat-btn" id="sendBtn">VALIDER</button>
+    </div>
+
+    <!-- Status Overlay -->
+    <div class="status-overlay" id="statusOverlay">
+      <div class="status-title" id="statusTitle">VICTORY!</div>
+      <div class="status-desc" id="statusDesc">Mot découvert par le Chat !</div>
+      <button class="chat-btn" onclick="resetGameCloud()">MOT SUIVANT</button>
+    </div>
+  </div>
+
+  <!-- FIREBASE INTEGRATION & LOGIQUE DE JEU -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getDatabase, ref, set, onValue, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-    // CONFIGURATION FIREBASE (À remplacer par votre projet gratuit Firebase)
+    // Relevez ces informations depuis votre console Firebase gratuite
     const firebaseConfig = {
       apiKey: "VOTRE_API_KEY",
       authDomain: "VOTRE_PROJET.firebaseapp.com",
@@ -30,12 +357,6 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // Variables de jeu partagées
-    let currentWordObj = { word: "TRISTANISGREAT", category: "HUMOR & BARROOM TALK" };
-    let guessedLetters = [];
-    let wrongGuesses = 0;
-    const MAX_ERRORS = 6;
-
     const WORD_BANK = [
       { word: "TRISTANISGREAT", category: "HUMOR & BARROOM TALK" },
       { word: "SOUNDISAFUCKINRACIST", category: "STREAM & CHAT HUMOR" },
@@ -45,7 +366,12 @@
       { word: "DINDUSSEISSOUNDBITCH", category: "CHAT LEGEND" }
     ];
 
-    // Synthétiseur Audio Web
+    let currentWordObj = { word: "TRISTANISGREAT", category: "HUMOR & BARROOM TALK" };
+    let guessedLetters = [];
+    let wrongGuesses = 0;
+    const MAX_ERRORS = 6;
+
+    // Web Audio Sound Synthesizer
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     function playSound(type) {
       if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -72,7 +398,7 @@
       }
     }
 
-    // Écouteur en temps réel de la base de données Firebase
+    // Écouteur Cloud Firebase (Mise à jour automatique OBS et Viewers)
     const gameRef = ref(db, 'hangstein_game');
     onValue(gameRef, (snapshot) => {
       const data = snapshot.val();
@@ -82,11 +408,8 @@
         wrongGuesses = data.wrongGuesses || 0;
         
         updateUI();
-        
-        // Vérifier si la partie est gagnée ou perdue
         checkGameStatusRemote(data);
       } else {
-        // Initialiser la première partie si la base est vide
         resetGameCloud();
       }
     });
@@ -95,7 +418,6 @@
       document.getElementById('categoryHint').innerText = `CATEGORY: ${currentWordObj.category}`;
       document.getElementById('attemptsLeft').innerText = `ERRORS: ${wrongGuesses} / ${MAX_ERRORS}`;
 
-      // MAJ des parties du pendu SVG
       for (let i = 0; i < MAX_ERRORS; i++) {
         const part = document.getElementById(`part-${i}`);
         if (i < wrongGuesses) {
@@ -105,7 +427,6 @@
         }
       }
 
-      // MAJ des cases du mot
       const wordDisplay = document.getElementById('wordDisplay');
       wordDisplay.innerHTML = '';
       for (let char of currentWordObj.word) {
@@ -120,7 +441,6 @@
         wordDisplay.appendChild(box);
       }
 
-      // MAJ des lettres jouées
       const usedContainer = document.getElementById('usedLetters');
       usedContainer.innerHTML = '';
       guessedLetters.forEach(letter => {
@@ -134,7 +454,6 @@
       });
     }
 
-    // Action d'un joueur (soumission de lettre ou de mot)
     window.processGuess = function(input) {
       const cleanInput = input.trim().toUpperCase();
       if (!cleanInput) return;
@@ -167,7 +486,6 @@
           }
         }
 
-        // Sauvegarder le nouvel état dans le Cloud Firebase (met instantanément à jour OBS et tous les joueurs)
         set(gameRef, {
           word: word,
           category: currentWordObj.category,
@@ -187,11 +505,11 @@
       if (isWon) {
         confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
         document.getElementById('statusTitle').innerText = "VICTORY!";
-        document.getElementById('statusDesc').innerText = `Word guessed by the community!`;
+        document.getElementById('statusDesc').innerText = `Mot découvert par la communauté !`;
         overlay.classList.add('active');
       } else if (errors >= MAX_ERRORS) {
         document.getElementById('statusTitle').innerText = "GAME OVER";
-        document.getElementById('statusDesc').innerText = `The word was: ${word}`;
+        document.getElementById('statusDesc').innerText = `Le mot était : ${word}`;
         overlay.classList.add('active');
       } else {
         overlay.classList.remove('active');
@@ -208,7 +526,6 @@
       });
     }
 
-    // Événements de saisie locale
     document.addEventListener("DOMContentLoaded", () => {
       document.getElementById('sendBtn').addEventListener('click', () => {
         const input = document.getElementById('chatInput');
@@ -225,88 +542,5 @@
       });
     });
   </script>
-
-  <style>
-    :root {
-      --tb-wine: #800020;
-      --tb-crimson: #B22222;
-      --tb-bright-red: #E60000;
-      --tb-wine-glow: rgba(178, 34, 34, 0.45);
-      --tb-gold: #D4AF37;
-      --tb-gold-light: #F3E5AB;
-      --tb-bg-dark: #0D0306;
-      --tb-card-bg: rgba(26, 8, 14, 0.92);
-      --tb-border: rgba(178, 34, 34, 0.45);
-      --text-white: #FFFFFF;
-      --text-muted: #E0C0C6;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
-
-    body {
-      background-color: var(--tb-bg-dark);
-      background-image: 
-        radial-gradient(circle at 20% 20%, rgba(128, 0, 32, 0.25) 0%, transparent 40%),
-        radial-gradient(circle at 80% 80%, rgba(178, 34, 34, 0.15) 0%, transparent 40%);
-      font-family: 'Big Shoulders Display', sans-serif;
-      color: var(--text-white);
-      width: 100vw; height: 100vh;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      padding: 12px; overflow: hidden;
-    }
-
-    .app-container {
-      width: 100%; max-width: 900px; height: 100%; max-height: 500px;
-      background: var(--tb-card-bg); border: 2px solid var(--tb-border);
-      border-left: 8px solid var(--tb-crimson); border-radius: 12px;
-      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.9), 0 0 30px var(--tb-wine-glow);
-      backdrop-filter: blur(16px); display: flex; flex-direction: column;
-      justify-content: space-between; padding: 16px; position: relative;
-    }
-
-    .header {
-      display: flex; justify-content: space-between; align-items: center;
-      border-bottom: 1px solid var(--tb-border); padding-bottom: 8px;
-    }
-
-    .brand-badge { font-family: 'Big Shoulders Inline', sans-serif; font-size: 24px; color: var(--tb-gold); letter-spacing: 2px; text-transform: uppercase; }
-    .game-title { font-size: 20px; font-weight: 800; color: var(--text-white); letter-spacing: 1.5px; }
-    .attempts-badge { font-size: 16px; font-weight: 800; background: rgba(178, 34, 34, 0.3); border: 1px solid var(--tb-crimson); padding: 4px 10px; border-radius: 6px; color: var(--tb-gold-light); }
-
-    .game-body { display: flex; gap: 20px; align-items: center; justify-content: space-between; flex: 1; margin: 10px 0; }
-
-    .svg-container {
-      width: 180px; height: 220px; background: rgba(0, 0, 0, 0.3);
-      border: 1px solid var(--tb-border); border-radius: 8px; display: flex; align-items: center; justify-content: center;
-    }
-
-    svg line, svg circle { stroke: var(--text-white); stroke-width: 4; stroke-linecap: round; transition: all 0.3s ease; }
-    .gallows { stroke: var(--tb-gold) !important; stroke-width: 5 !important; }
-    .hangman-part { opacity: 0; }
-    .hangman-part.visible { opacity: 1; stroke: var(--tb-bright-red) !important; }
-
-    .word-area { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; }
-    .word-display { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; max-width: 600px; }
-    
-    .letter-box {
-      width: 36px; height: 46px; border-bottom: 4px solid var(--tb-crimson);
-      background: rgba(255, 255, 255, 0.05); border-radius: 4px; display: flex;
-      align-items: center; justify-content: center; font-size: 26px; font-weight: 900;
-      color: var(--text-white); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-    }
-    .letter-box.revealed { color: var(--tb-gold); border-bottom-color: var(--tb-gold); }
-    .category-hint { font-size: 16px; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; }
-
-    .used-letters { display: flex; gap: 6px; flex-wrap: wrap; max-width: 400px; justify-content: center; min-height: 36px; }
-    .used-tag { font-size: 14px; font-weight: 800; padding: 2px 8px; background: rgba(255, 255, 255, 0.08); border-radius: 4px; color: var(--text-muted); }
-    .used-tag.wrong { background: rgba(178, 34, 34, 0.4); color: #FF8888; border: 1px solid var(--tb-bright-red); }
-
-    .chat-simulator { display: flex; gap: 8px; border-top: 1px solid var(--tb-border); padding-top: 10px; }
-    .chat-input {
-      flex: 1; background: rgba(0, 0, 0, 0.5); border: 1px solid var(--tb-border);
-      padding: 8px 12px; border-radius: 6px; color: var(--text-white); font-family: 'Inter', sans-serif; font-size: 14px; outline: none;
-    }
-    .chat-btn {
-      background: linear-gradient(135deg, var(--tb-crimson), var(--tb-wine)); border: 1px solid var(--tb-gold);
-      color: var(--text-white); font-family: 'Big Shoulders Display', sans-serif; font-size: 18px; font-weight: 800;
-      padding: 0 20px; border-radius
+</body>
+</html>
