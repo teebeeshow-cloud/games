@@ -293,7 +293,7 @@
     <!-- Header -->
     <div class="header">
       <span class="brand-badge">THE BEYOND SHOW</span>
-      <span class="game-title">HANGSTEIN</span>
+      <span class="game-title">HANGSTEIN (SYNC)</span>
       <span class="attempts-badge" id="attemptsLeft">ERRORS: 0 / 6</span>
     </div>
 
@@ -333,25 +333,24 @@
     <!-- Status Overlay -->
     <div class="status-overlay" id="statusOverlay">
       <div class="status-title" id="statusTitle">VICTORY!</div>
-      <div class="status-desc" id="statusDesc">Mot découvert par le Chat !</div>
+      <div class="status-desc" id="statusDesc">Mot découvert par la communauté !</div>
       <button class="chat-btn" onclick="resetGameCloud()">MOT SUIVANT</button>
     </div>
   </div>
 
-  <!-- FIREBASE INTEGRATION & LOGIQUE DE JEU -->
+  <!-- FIREBASE CLOUD SYNC & LOGIC -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getDatabase, ref, set, onValue, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-    // Relevez ces informations depuis votre console Firebase gratuite
     const firebaseConfig = {
-      apiKey: "VOTRE_API_KEY",
-      authDomain: "VOTRE_PROJET.firebaseapp.com",
-      databaseURL: "https://VOTRE_PROJET-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId: "VOTRE_PROJET",
-      storageBucket: "VOTRE_PROJET.appspot.com",
-      messagingSenderId: "VOTRE_SENDER_ID",
-      appId: "VOTRE_APP_ID"
+      apiKey: "AIzaSyBDPW2RhNxo0AftQNSuUI2D_jYJsgMKmXg",
+      authDomain: "tbshow-games.firebaseapp.com",
+      databaseURL: "https://tbshow-games-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "tbshow-games",
+      storageBucket: "tbshow-games.firebasestorage.app",
+      messagingSenderId: "766455986737",
+      appId: "1:766455986737:web:82b8787d4891fbca4d7310"
     };
 
     const app = initializeApp(firebaseConfig);
