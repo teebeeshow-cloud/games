@@ -293,7 +293,7 @@
     <!-- Header -->
     <div class="header">
       <span class="brand-badge">THE BEYOND SHOW</span>
-      <span class="game-title">HANGSTEIN (SYNC)</span>
+      <span class="game-title">HANGSTEIN</span>
       <span class="attempts-badge" id="attemptsLeft">ERRORS: 0 / 6</span>
     </div>
 
@@ -326,15 +326,15 @@
 
     <!-- Chat Simulator / Input -->
     <div class="chat-simulator">
-      <input type="text" id="chatInput" class="chat-input" placeholder="Tapez une lettre ou le mot complet..." autofocus>
-      <button class="chat-btn" id="sendBtn">VALIDER</button>
+      <input type="text" id="chatInput" class="chat-input" placeholder="Enter a letter or full word..." autofocus>
+      <button class="chat-btn" id="sendBtn">GUESS</button>
     </div>
 
     <!-- Status Overlay -->
     <div class="status-overlay" id="statusOverlay">
       <div class="status-title" id="statusTitle">VICTORY!</div>
-      <div class="status-desc" id="statusDesc">Mot découvert par la communauté !</div>
-      <button class="chat-btn" onclick="resetGameCloud()">MOT SUIVANT</button>
+      <div class="status-desc" id="statusDesc">FOUND BY COMMUNITY</div>
+      <button class="chat-btn" onclick="resetGameCloud()">NEXT</button>
     </div>
   </div>
 
@@ -357,12 +357,12 @@
     const db = getDatabase(app);
 
     const WORD_BANK = [
-      { word: "TRISTANISGREAT", category: "HUMOR & BARROOM TALK" },
-      { word: "SOUNDISAFUCKINRACIST", category: "STREAM & CHAT HUMOR" },
-      { word: "BEINGANDPYRA", category: "CHAT REACTION" },
-      { word: "ROMAINGISADOUCHEBAG", category: "MEDIA & HUMOR" },
-      { word: "YANNCOTTYISTHEGREATEST", category: "MEDIA & HUMOR" },
-      { word: "DINDUSSEISSOUNDBITCH", category: "CHAT LEGEND" }
+      { word: "TRISTANISFANTASTIC", category: "HUMOR & BARROOM TALK" },
+      { word: "SOUNDISTHEGREATEST", category: "STREAM & CHAT HUMOR" },
+      { word: "PYRAISNOTBALD", category: "CHAT REACTION" },
+      { word: "ROMAINGISA", category: "MEDIA & HUMOR" },
+      { word: "YANNCOTTYISMYGAYFRIEND", category: "MEDIA & HUMOR" },
+      { word: "DUDUSSEISMYMATE", category: "CHAT LEGEND" }
     ];
 
     let currentWordObj = { word: "TRISTANISGREAT", category: "HUMOR & BARROOM TALK" };
@@ -504,11 +504,11 @@
       if (isWon) {
         confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
         document.getElementById('statusTitle').innerText = "VICTORY!";
-        document.getElementById('statusDesc').innerText = `Mot découvert par la communauté !`;
+        document.getElementById('statusDesc').innerText = `FOUND BY COMMUNITY !`;
         overlay.classList.add('active');
       } else if (errors >= MAX_ERRORS) {
         document.getElementById('statusTitle').innerText = "GAME OVER";
-        document.getElementById('statusDesc').innerText = `Le mot était : ${word}`;
+        document.getElementById('statusDesc').innerText = `SOLUTION IS : ${word}`;
         overlay.classList.add('active');
       } else {
         overlay.classList.remove('active');
